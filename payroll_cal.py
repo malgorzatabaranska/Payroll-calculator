@@ -3,6 +3,7 @@
 #assigned to the given gross salary
 
 from tkinter import *
+from urllib import request, response
 
 
 class Aplication(Frame): 
@@ -81,7 +82,6 @@ class Aplication(Frame):
                     variable= self.ppk
                     ).grid(row= 8, column= 0, sticky= W) 
 
-        
         percent= IntVar()
 
         Label(self,
@@ -95,7 +95,6 @@ class Aplication(Frame):
                 text= "%",
                 pady= 10
                 ).grid(row= 9, column= 2, sticky= W)
-        
 
         Button(self, 
                 text= "OBLICZ", bd= 5, padx= 54, pady= 20,
@@ -105,7 +104,8 @@ class Aplication(Frame):
         self.text= Text(self, width= 75, height= 10, wrap= WORD)
         self.text.grid(row= 13, column= 0, columnspan= 4)
 
-class Mockup(object):
+
+class Request(object):
     """Class for sending request"""
     
     def check(self):
@@ -142,23 +142,46 @@ class Mockup(object):
                 "poza_miejscem_zamieszkania":expression["work_place"],
                 "wspolne_rozliczanie":0,
                 "uwzglednij_bowe":0,
-                "zwiekszone_koszty_uzyskania":0}
-
-        print(header)
-        x = requests.post(url, headers= header, params= params)
-
-        soup= BeautifulSoup(x.content, 'html.parser')
-        soup.prettify()
-        lst= soup.find_all("span",{'class':"sc-1qjgijr-1 tvpvj"})
-        netto= lst[0].text
+                "zwiekszone_koszty_uzyskania":0,
+                "uwzglednij_kwote_wolna":1,      
+                "ppk": expression["ppk"],
+                "ppk_pracownik":2,
+                "ppk_pracodawca":1.5,
+                "pit_26": expression["more26"],
+                "zus":0,
+                "dobrowolne_chorobowe":0,
+                "zwiekszone_koszty_uzyskania":0
+                }
 
         app.text.delete(0.0, END)
-        print(netto)
-        app.text.insert(0.0, "Wynagrodzenie netto: " + netto)
+
+        #Api send request to url
+        try:
+            response = requests.post(url, headers= header, params= params)
+            response.raise_for_status()
+
+             #take a html, use BS4 for take a net value
+            try:
+                soup= BeautifulSoup(response.content, 'html.parser')
+                soup.prettify()
+                lst= soup.find_all("span",{'class':"sc-1qjgijr-1 tvpvj"})
+                netto= lst[0].text
+                #send net value to app window 
+                app.text.insert(0.0, expression["types"] + "- zarobki miesięczne dla kwoty " + expression["gross_ent"] +" zł brutto wynoszą netto: " + netto)
+            except: 
+                app.text.insert(0.0, "Wystąpił błąd podczas pobierania danych")
+        except requests.exceptions.HTTPError as error:
+            app.text.insert(0.0, "Wystąpił błąd: (" + str(error) + ")")
+        except requests.exceptions.ConnectionError: 
+            app.text.insert(0.0, "Błąd połączenia z serwerem")
+        except requests.exceptions.RequestException:
+            app.text.insert(0.0, "Wystąpił błąd, spróbuj ponownie")
       
 
+       
+
 # main
-req= Mockup()
+req= Request()
 root= Tk()
 root.title("KALKULATOR WYNAGRODZEŃ")
 app= Aplication(root, req)
