@@ -2,13 +2,7 @@
 #aplication which using the online payroll calculator, will print out the net amounts
 #assigned to the given gross salary
 
-
-from telnetlib import NOP
 from tkinter import *
-from click import command
-import requests
-
-url= "https://wynagrodzenia.pl/kalkulator-wynagrodzen"
 
 
 class Aplication(Frame): 
@@ -31,7 +25,7 @@ class Aplication(Frame):
         self.types= StringVar()
         self.types.set= None
 
-        types= ["Umowa o pracę", "Umowa zlecenie", "Umowa o dzieło"]
+        types= ["UMOWA_O_PRACE", "UMOWA_ZLECENIE", "UMOWA_O_DZIELO"]
         column= 1
         for type in types:
             Radiobutton(self,
@@ -43,7 +37,7 @@ class Aplication(Frame):
             column+= 1
 
     
-        gross = IntVar()
+        gross = StringVar()
 
         Label(self,
                 text= "Wprowadź kwotę brutto wynagrodzenia: "
@@ -72,13 +66,6 @@ class Aplication(Frame):
                     padx= 50, pady= 10,
                     variable= self.more26
                     ).grid(row= 5, column= 0, sticky= W)     
-
-        self.middle_class= BooleanVar()
-        Checkbutton(self,
-                    text= "miesięczna ulga dla klasy średniej",
-                    padx= 50, pady= 10,
-                    variable= self.middle_class
-                    ).grid(row= 6, column= 0, sticky= W)  
 
         self.fgsp= BooleanVar()
         Checkbutton(self,
@@ -123,21 +110,52 @@ class Mockup(object):
     
     def check(self):
        # if app.text == 1: 
+        global expression
+                
         expression = {
                     "types": app.types.get(),
-                    "gross_ent" : app.gross_ent.get(),
-                    "work_place" : app.work_place.get(),
-                    "cons_salary" : app.cons_salary.get(),
-                    "more26" : app.more26.get(), 
-                    "middle_class": app.middle_class.get(),
-                    "fgsp" : app.fgsp.get(), 
-                    "ppk" : app.ppk.get(),
-                    "percent" : app.percent.get()
+                    "gross_ent" : str(app.gross_ent.get()),
+                    "work_place" : str(int(app.work_place.get())),
+                    "cons_salary" : str(int(app.cons_salary.get())),
+                    "more26" : str(int(app.more26.get())), 
+                    "fgsp" : str(int(app.fgsp.get())), 
+                    "ppk" : str(int(app.ppk.get())),
+                    "percent" : str(app.percent.get())
                     }
 
-        
-        
 
+        import requests
+        from bs4 import BeautifulSoup
+
+        url= "https://www.money.pl/podatki/kalkulatory/plac"
+
+        header= { "query": "query sg_money_gielda_kalulator_wynagrodzen($rok_podatkowy: Int!, $typ_kalkulatora: Podatki_CalculatorTypesEnum!, $typ_wynagrodzenia: Podatki_SalaryTypesEnum!, $pensja: Float!, $pensja_miesiace: [Float], $koszty_autorskie: Int, $koszty_autorskie_procent: Int, $ppk: Int, $ppk_pracownik: Float, $ppk_pracodawca: Float, $pit_26: Int, $zwiekszone_koszty_uzyskania: Int, $poza_miejscem_zamieszkania: Int, $uwzglednij_kwote_wolna: Int, $wspolne_rozliczanie: Int) { calculated: salary_calc(rok_podatkowy: $rok_podatkowy, typ_kalkulatora: $typ_kalkulatora, typ_wynagrodzenia: $typ_wynagrodzenia, pensja: $pensja, pensja_miesiace: $pensja_miesiace, koszty_autorskie: $koszty_autorskie, koszty_autorskie_procent: $koszty_autorskie_procent, ppk: $ppk, ppk_pracownik: $ppk_pracownik, ppk_pracodawca: $ppk_pracodawca, pit_26: $pit_26, zwiekszone_koszty_uzyskania: $zwiekszone_koszty_uzyskania, poza_miejscem_zamieszkania: $poza_miejscem_zamieszkania, uwzglednij_kwote_wolna: $uwzglednij_kwote_wolna, wspolne_rozliczanie: $wspolne_rozliczanie) { miesiace { miesiac koszt_uzyskania zaliczka zdrowotne chorobowe rentowe emerytalne rentowe_pracodawca emerytalne_pracodawca brutto netto stawka zaliczka koszt_pracodawcy wypadkowe_pracodawca fundusz_pracy_pracodawca fgsp_pracodawca __typename } koszt_uzyskania zaliczka zdrowotne chorobowe rentowe emerytalne rentowe_pracodawca emerytalne_pracodawca zaliczka netto brutto niedoplata koszt_pracodawcy fgsp_pracodawca wypadkowe_pracodawca fundusz_pracy_pracodawca zlecenie_netto_miesiac zlecenie_brutto_miesiac zlecenie_pracodawca_miesiac dzielo_netto_miesiac dzielo_brutto_miesiac dzielo_pracodawca_miesiac praca_netto_miesiac praca_brutto_miesiac praca_pracodawca_miesiac __typename } } ",
+                "operationName": "sg_money_gielda_kalulator_wynagrodzen",
+                "variables": '\'{"rok_podatkowy":2022,"pensja":"' + str(expression["gross_ent"]) + '","typ_kalkulatora":"' + str(expression["types"]) + '","typ_wynagrodzenia":"brutto","koszty_autorskie":0,"koszty_autorskie_procent":0,"poza_miejscem_zamieszkania":' + str(expression["work_place"]) + ',"wspolne_rozliczanie":0,"uwzglednij_kwote_wolna":1,"ppk":' + str(expression["ppk"]) + ',"ppk_pracownik":2,"ppk_pracodawca":1.5,"pit_26":' + str(expression["more26"])+ ',"zus":"STANDARD"}\'}' }
+        
+        params = {"rok_podatkowy":2022,
+                "pensja":expression["gross_ent"], 
+                "typ_kalkulatora":0, 
+                "typ_wynagrodzenia":0, 
+                "koszty_autorskie":0,
+                "koszty_autorskie_procent":0,
+                "poza_miejscem_zamieszkania":expression["work_place"],
+                "wspolne_rozliczanie":0,
+                "uwzglednij_bowe":0,
+                "zwiekszone_koszty_uzyskania":0}
+
+        print(header)
+        x = requests.post(url, headers= header, params= params)
+
+        soup= BeautifulSoup(x.content, 'html.parser')
+        soup.prettify()
+        lst= soup.find_all("span",{'class':"sc-1qjgijr-1 tvpvj"})
+        netto= lst[0].text
+
+        app.text.delete(0.0, END)
+        print(netto)
+        app.text.insert(0.0, "Wynagrodzenie netto: " + netto)
+      
 
 # main
 req= Mockup()
