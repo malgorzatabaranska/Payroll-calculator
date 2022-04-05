@@ -30,16 +30,14 @@ class Application(Frame):
         self.types= StringVar()
         self.types.set= None
 
-        types= ["UMOWA_O_PRACE", "UMOWA_ZLECENIE", "UMOWA_O_DZIELO"]
-        column= 1
-        for type in types:
-            Radiobutton(self,
-                        text= type, 
-                        variable= self.types,
-                        value= type,
-                        padx= 50, pady= 10
-                        ).grid(row= 1, column= column, sticky= W)
-            column+= 1
+        type=["UMOWA_O_PRACE"]
+
+        Radiobutton(self,
+                    text= type,
+                    variable= self.types,
+                    value= type,
+                    padx= 50, pady= 10
+                    ).grid(row= 1, column= 1, sticky= W)
 
     
         gross= StringVar()
@@ -62,7 +60,7 @@ class Application(Frame):
 
         self.more26= BooleanVar()
         Checkbutton(self,
-                    text= "ukończone 26 lat",
+                    text= "Ulga dla młodych- PIT-0 do 26 roku",
                     padx= 50, pady= 10,
                     variable= self.more26
                     ).grid(row= 4, column= 0, sticky= W)     
@@ -84,35 +82,19 @@ class Application(Frame):
                     ).grid(row= 6, column= 0, sticky= W) 
 
 
-        percent= IntVar()
-
-        Label(self,
-                text= "stopa procentowa składki na ubezpieczenie wypadkowe ** "
-                ).grid(row= 7, column= 0, sticky= W)
-
-        self.percent= Entry(self, textvariable= percent)
-        self.percent.grid(row= 7, column= 1, sticky= E)
-
-
-        Label(self, 
-                text= "%",
-                pady= 10
-                ).grid(row= 7, column= 2, sticky= W)
-
-
         Button(self, 
                 text= "OBLICZ", bd= 5, padx= 54, pady= 20,
                 command = lambda: req.application_data(self, data)
-                ).grid(row= 8, column= 1, sticky= W)
+                ).grid(row= 7, column= 0, sticky= W)
 
         self.text= Text(self, width= 75, height= 10, wrap= WORD)
-        self.text.grid(row= 9, column= 0, columnspan= 4)
+        self.text.grid(row= 8, column= 0, columnspan= 4)
 
 
         Button(self,
                 text= "RYSUJ WYKRES", bd= 5, padx= 30, pady=20,
                 command= lambda:chart.chart(data)
-                ).grid(row= 8, column= 2, sticky= W)
+                ).grid(row= 7, column= 2, sticky= W)
 
 
 class Request(object):
